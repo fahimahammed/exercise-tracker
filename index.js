@@ -30,48 +30,75 @@ const userSchema = new Schema({
 });
 const UserModel = mongoose.model('User', userSchema);
 
+
+const exerciseSchema = new mongoose.Schema({
+  userId: {
+    type: String,
+    required: [true, "Must include a userId"]
+  },
+  description: {
+    type: String,
+    required: [true, "Must include a description"]
+  },
+  duration: {
+    type: Number,
+    required: [true, "Must include a duration"]
+  },
+  date: {
+    type: String,
+    default: new Date().toDateString()
+  }
+})
+
+const ExerciseModel = mongoose.model('Exercise', exerciseSchema);
 // API Endpoint: Create a new user
 app.post('/api/users', async (req, res) => {
-  const { username } = req.body;
 
   try {
-    const newUser = new UserModel({ username });
-    const savedUser = await newUser.save();
-    res.json(savedUser);
+    const user = await UserModel.create(req.body)
+    return res.status(201).json({
+      "username": user.username,
+      "_id": user._id
+    })
   } catch (error) {
-    res.status(400).json({ error: 'Username already taken' });
+    console.log(error.message);
+    res.status(500).json({
+      "message": "Server error"
+    })
   }
 });
 
 // API Endpoint: Add exercise to a user
 app.post('/api/users/:_id/exercises', async (req, res) => {
-  const { _id } = req.params;
-  const { description, duration, date } = req.body;
-
   try {
-    const user = await UserModel.findById(_id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
-
+    // const _id = req.body[":_id"];
+    const _id = req.params._id;
+    const foundUser = await UserModel.findOne({
+      "_id": _id
+    })
+    if (!foundUser) return res.status(404).json({ "message": `User with id ${_id} not found` })
+    const { username } = foundUser
+    const { description, duration, date } = req.body;
     const newExercise = {
-      description,
-      duration: parseInt(duration),
-      date: date ? new Date(date) : new Date()
-    };
-
-    user.log.push(newExercise);
-    await user.save();
-
-    res.json({
-      _id: user._id,
-      username: user.username,
-      description: newExercise.description,
-      duration: newExercise.duration,
-      date: newExercise.date.toDateString()
-    });
+      "userId": _id,
+      "date": date ? new Date(date).toDateString() : new Date().toDateString(),
+      "duration": duration,
+      "description": description,
+    }
+    const created = await ExerciseModel.create(newExercise);
+    const exercise = {
+      "username": username,
+      "description": created.description,
+      "duration": created.duration,
+      "date": created.date,
+      "_id": _id,
+    }
+    res.status(201).json(exercise);
   } catch (error) {
-    res.status(400).json({ error: 'Invalid request' });
+    console.log(error.message);
+    res.status(500).json({
+      "message": "Server error"
+    })
   }
 });
 
