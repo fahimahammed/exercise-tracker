@@ -114,39 +114,51 @@ app.get('/api/users', async (req, res) => {
 
 // API Endpoint: Get user's exercise log
 app.get('/api/users/:_id/logs', async (req, res) => {
-  const { _id } = req.params;
-  const { from, to, limit } = req.query;
-
   try {
-    const user = await UserModel.findById(_id);
-    if (!user) {
-      return res.status(404).json({ error: 'User not found' });
-    }
+    const _id = req.params._id;
+    const { from, to, limit } = req.query
 
-    let logs = user.log;
+    const foundUser = await UserModel.findOne({
+      "_id": _id
+    })
+
+    if (!foundUser) return res.status(404).json({ "message": `User with id ${_id} not found` })
+    const { username } = foundUser;
+    let exercises = await ExerciseModel.find({
+      "userId": _id,
+    });
 
     if (from) {
-      logs = logs.filter(exercise => new Date(exercise.date) >= new Date(from));
+      const fromDate = new Date(from);
+      exercises = exercises.filter(exercise => new Date(exercise.date) >= fromDate);
     }
     if (to) {
-      logs = logs.filter(exercise => new Date(exercise.date) <= new Date(to));
+      const toDate = new Date(to);
+      exercises = exercises.filter(exercise => new Date(exercise.date) <= toDate);
     }
     if (limit) {
-      logs = logs.slice(0, parseInt(limit));
+      exercises = exercises.splice(0, Number(limit));
     }
+    let count = exercises.length;
 
-    res.json({
-      _id: user._id,
-      username: user.username,
-      count: logs.length,
-      log: logs.map(exercise => ({
-        description: exercise.description,
-        duration: exercise.duration,
-        date: exercise.date.toDateString()
-      }))
-    });
+    const exercisesList = exercises.map(exercise => {
+      return {
+        "description": exercise.description,
+        "duration": exercise.duration,
+        "date": exercise.date
+      }
+    })
+    return res.json({
+      "username": username,
+      "count": count,
+      "_id": _id,
+      "log": exercisesList
+    })
   } catch (error) {
-    res.status(400).json({ error: 'Invalid request' });
+    console.log(error.message);
+    res.status(500).json({
+      "message": "Server error"
+    })
   }
 });
 
