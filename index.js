@@ -102,6 +102,16 @@ app.post('/api/users/:_id/exercises', async (req, res) => {
   }
 });
 
+// API Endpoint: Get all users
+app.get('/api/users', async (req, res) => {
+  try {
+    const users = await UserModel.find({}, '_id username');
+    res.json(users);
+  } catch (error) {
+    res.status(400).json({ error: 'Could not retrieve users' });
+  }
+});
+
 // API Endpoint: Get user's exercise log
 app.get('/api/users/:_id/logs', async (req, res) => {
   const { _id } = req.params;
