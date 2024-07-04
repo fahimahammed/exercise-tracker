@@ -66,5 +66,5 @@ Build a full stack JavaScript application that allows users to log exercises, vi
 - Inspiration and learning resources from the FreeCodeCamp community.
 
 
-
-This is the boilerplate for the Exercise Tracker project. Instructions for building your project can be found at https://www.freecodecamp.org/learn/apis-and-microservices/apis-and-microservices-projects/exercise-tracker
+---
+This is the project for the Exercise Tracker project. Instructions for building your project can be found at https://www.freecodecamp.org/learn/apis-and-microservices/apis-and-microservices-projects/exercise-tracker
